@@ -9,45 +9,25 @@ import AddTask from "./AddTasks";
 
 import moment from 'moment'
 import 'moment/locale/pt-br'
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
-
+const initialState = { 
+    showDoneTasks: true,
+    showAddTask: false,
+    visibleTasks: [],
+    tasks: []
+}
 
 export default class TaskList extends Component {
 
     state = {
-        showDoneTasks: true,
-        showAddTask: false,
-        visibleTasks: [],
-        tasks: [
-            {
-                id: Math.random(),
-                desc: "Não reprovar no Semestre",
-                estimateAt: new Date(),
-                doneAt: new Date()
-            },
-            {
-                id: Math.random(),
-                desc: "Jogar Horizon fim de semana",
-                estimateAt: new Date(),
-                doneAt: new Date()
-            },
-            {
-                id: Math.random(),
-                desc: "A MIMIR",
-                estimateAt: new Date(),
-                doneAt: null
-            },
-            {
-                id: Math.random(),
-                desc: "Trocar de moto",
-                estimateAt: new Date(),
-                doneAt: null
-            }
-        ]
+       ...initialState
     }
 
-    componentDidMount = () => {
-        this.filterTasks()
+    componentDidMount = async () => {
+       const stateString = await AsyncStorage.getItem('tasksState')
+       const state = JSON.parse(stateString) || initialState
+       this.setState(state)
     }
 
     filterTasks = () => {
@@ -60,6 +40,7 @@ export default class TaskList extends Component {
         }
 
         this.setState({ visibleTasks })
+        AsyncStorage.setItem('tasksState', JSON.stringify(this.state))
     }
 
     toggleFilter = () => {
@@ -92,7 +73,11 @@ export default class TaskList extends Component {
             doneAt: null
         })
 
-        this.setState({ tasks, showAddTask: false },this.filterTasks)
+        this.setState({ tasks, showAddTask: false }, this.filterTasks)
+    }
+    deleteTask = id => {
+        const tasks = this.state.tasks.filter(task => task.id !== id)
+        this.setState({ tasks }, this.filterTasks)
     }
 
 
@@ -125,7 +110,7 @@ export default class TaskList extends Component {
                         data={this.state.visibleTasks}
                         keyExtractor={item => `${item.id}`}
                         renderItem={({ item }) => <Task {...item}
-                            toggleTask={this.toggleTask} />
+                            onToggleTask={this.toggleTask} onDelete={this.deleteTask} />
                         }
                     />
                 </View>
