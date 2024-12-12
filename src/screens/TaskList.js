@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { FlatList, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, FlatList, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import todayImage from '../../assets/imgs/today.jpg'
 import commonStyles from "../commonStyles";
@@ -9,6 +9,8 @@ import AddTask from "./AddTasks";
 
 import moment from 'moment'
 import 'moment/locale/pt-br'
+
+
 
 export default class TaskList extends Component {
 
@@ -75,12 +77,33 @@ export default class TaskList extends Component {
         this.setState({ tasks }, this.filterTasks)
     }
 
+    addTask = newTask => {
+        if (!newTask.desc || !newTask.desc.trim()) {
+            Alert.alert('Dados Inválidos', 'descrição não informada')
+            return
+        }
+
+        const tasks = [...this.state.tasks]
+
+        tasks.push({
+            id: Math.random(),
+            desc: newTask.desc,
+            estimateAt: newTask.date,
+            doneAt: null
+        })
+
+        this.setState({ tasks, showAddTask: false },this.filterTasks)
+    }
+
+
     render() {
         const today = moment().locale('pt-br').format('ddd, D [de] MMMM')
         return (
             <View style={styles.container}>
                 <AddTask isVisible={this.state.showAddTask}
-                    onCancel={() => this.setState({ showAddTask: false })} />
+                    onCancel={() => this.setState({ showAddTask: false })}
+                    onSave={this.addTask}
+                />
                 <ImageBackground source={todayImage}
                     style={styles.background}>
                     <View style={styles.iconBar}>
@@ -107,7 +130,7 @@ export default class TaskList extends Component {
                     />
                 </View>
                 <TouchableOpacity style={styles.addButton}
-                activeOpacity={0.7}
+                    activeOpacity={0.7}
                     onPress={() => this.setState({ showAddTask: true })}>
                     <Icon name="plus" size={22} color={commonStyles.colors.secondary} />
                 </TouchableOpacity>
